@@ -1,0 +1,58 @@
+function createAndSendSalSlips() {
+  var empID = "";
+  var empName="";
+  var empEmail = "";
+  var empDesg="";
+  var empTIN="";
+  var noOfDaysWorked=0;
+  var salMonth="";
+  var basicSal=0;
+  var hra=0;
+  var travelAllowence=0;
+  var grossIncome=0;
+  var netSal=0;
+  var otherallowance=0;
+  var spSheet = SpreadsheetApp.getActiveSpreadsheet();
+  var salSheet = spSheet.getSheetByName("<Name of google sheet>");
+  var salaryDetailsFolder =       DriveApp.getFolderById("<id of folder in which pdf generated>");
+ var salaryTemplate =  DriveApp.getFileById("<id of template docs>");
+ var totalRows = salSheet.getLastRow();
+ for(var rowNo=2;rowNo <=totalRows; rowNo++)
+  {
+ empID= salSheet.getRange("A" + rowNo).getDisplayValue();
+ empName = salSheet.getRange("B" + rowNo).getDisplayValue();
+ empDesg= salSheet.getRange("C" + rowNo).getDisplayValue();
+ empTIN= salSheet.getRange("D" + rowNo).getDisplayValue();
+ empEmail= salSheet.getRange("E" + rowNo).getDisplayValue();
+ salMonth = salSheet.getRange("F" + rowNo).getDisplayValue();
+ noOfDaysWorked = salSheet.getRange("H" + rowNo).getDisplayValue();
+ basicSal = salSheet.getRange("I" + rowNo).getDisplayValue();
+ hra = salSheet.getRange("J" + rowNo).getDisplayValue();
+ travelAllowence = salSheet.getRange("K" + rowNo).getDisplayValue();
+ grossIncome=salSheet.getRange("L" + rowNo).getDisplayValue();
+ otherallowance=salSheet.getRange("O" + rowNo).getDisplayValue();
+ netSal=salSheet.getRange("M" + rowNo).getDisplayValue();
+ var rawSalFile = salaryTemplate.makeCopy(salaryDetailsFolder);
+ var rawFile = DocumentApp.openById(rawSalFile.getId());
+ var rawFileContent = rawFile.getBody();
+ rawFileContent.replaceText("EMP_ID_XXXX",empID);
+ rawFileContent.replaceText("EMP_NAME_XXXX",empName);
+ rawFileContent.replaceText("DESG_XXXX", empDesg);
+ rawFileContent.replaceText("MONTH_XXXX", salMonth);
+ rawFileContent.replaceText("DAYS_XXXX", noOfDaysWorked);
+ rawFileContent.replaceText("TIN_XXXX", empTIN);
+ rawFileContent.replaceText("OA_XXXX", otherallowance);
+ rawFileContent.replaceText("BASIC_SAL_XXXX", basicSal);
+ rawFileContent.replaceText("HRA_XXXX", hra);
+ rawFileContent.replaceText("TA_XXXX", travelAllowence);
+ rawFileContent.replaceText("TL_XXXX", grossIncome);
+ rawFileContent.replaceText("NSP_XXXX", netSal);
+ rawFile.saveAndClose(); 
+ var salSlip = rawFile.getAs(MimeType.PDF)
+ salPDF = salaryDetailsFolder.createFile(salSlip).setName("Salary_" + empID);
+salaryDetailsFolder.removeFile(rawSalFile);
+var mailSubject = "Salary Slip";
+var mailBody = "Please find the salary slip for the month of " + salMonth + "attached.";
+GmailApp.sendEmail(empEmail, mailSubject, mailBody, {attachments:[salPDF.getAs(MimeType.PDF)]});
+  }
+}
